@@ -1,6 +1,7 @@
 package com.finbox.subscrititionservice.service.impl;
 
 
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Feature;
 import com.finbox.subscrititionservice.models.request.FeatureRequest;
 import com.finbox.subscrititionservice.repositories.FeatureRepository;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -34,8 +36,8 @@ class FeatureServiceImplTest {
                                       String name) {
         FeatureRequest r = mock(FeatureRequest.class);
         when(r.getCode()).thenReturn(code);
-        when(r.getParentFeatureId()).thenReturn(parentId);
-        when(r.createFeature()).thenAnswer(i -> {
+        Mockito.lenient().when(r.getParentFeatureId()).thenReturn(parentId); // Mark as lenient
+        Mockito.lenient().when(r.createFeature()).thenAnswer(i -> {
             Feature f = new Feature();
             f.setCode(code);
             f.setParentFeatureId(parentId);
@@ -284,7 +286,7 @@ class FeatureServiceImplTest {
     @Nested class GetAllFeatureFlag {
 
         @Test @DisplayName("4.1 returns only enabled")
-        void returns_enabled_only() {
+        void returns_enabled_only() throws SubscriptionServiceException {
             Feature a = feature(50L,"A",null,true);
             Feature b = feature(51L,"B",null,false);
             Feature c = feature(52L,"C",null,true);
@@ -298,7 +300,7 @@ class FeatureServiceImplTest {
         }
 
         @Test @DisplayName("4.2 all disabled → empty list")
-        void all_disabled() {
+        void all_disabled() throws SubscriptionServiceException {
             Feature b = feature(53L,"B",null,false);
             when(featureRepository.findAll())
                     .thenReturn(List.of(b));
@@ -312,7 +314,7 @@ class FeatureServiceImplTest {
             when(featureRepository.findAll())
                     .thenReturn(List.of());
 
-            assertThrows(RuntimeException.class,
+            assertThrows(SubscriptionServiceException.class,
                     () -> service.getAllFeatureFlag());
         }
     }
