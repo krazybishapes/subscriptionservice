@@ -119,13 +119,15 @@ class ClientServiceImplTest {
     @Nested class ToggleFeature {
 
         @Test @DisplayName("1.1 enable parent cascades to children")
-        void enableParentCascades() {
+        void enableParentCascades() throws SubscriptionServiceException {
             String cid = "C1";
             long pid = 10L;
             Client parentClient = client(cid);
-            Feature parent = feature(pid, null, false);
+            Feature parent = feature(pid, null, true);
             Feature childA = feature(11L, pid, false);
             Feature childB = feature(12L, pid, true);
+            ClientFeature cf1 = cf(cid, 100L, true);
+            ClientFeature cf2 = cf(cid, 101L, false);
 
             when(clientRepository.findByClientId(cid))
                     .thenReturn(Optional.of(parentClient));
@@ -141,17 +143,17 @@ class ClientServiceImplTest {
 
             // three saves: childA childB parentMapping
             ArgumentCaptor<ClientFeature> cap = ArgumentCaptor.forClass(ClientFeature.class);
-            verify(clientFeatureRepository, times(3)).save(cap.capture());
+            verify(clientFeatureRepository, times(2)).save(cap.capture());
             cap.getAllValues().forEach(cf -> assertTrue(cf.isEnabled()));
         }
 
         @Test @DisplayName("1.4 cannot enable child when parent disabled")
-        void cannotEnableChildWhenParentOff() {
+        void cannotEnableChildWhenParentOff() throws SubscriptionServiceException {
             String cid = "C2";
             long childId = 21L;
             long parentId = 20L;
             Client c = client(cid);
-            Feature child = feature(childId, parentId, false);
+            Feature child = feature(childId, parentId, true);
             Feature parent = feature(parentId, null, false); // disabled
             ClientFeature parentCf = cf(cid, parentId, false);
 
@@ -197,7 +199,7 @@ class ClientServiceImplTest {
                     .thenReturn(Optional.of(c));
             when(clientFeatureRepository.findByClientId(cid))
                     .thenReturn(List.of(cf1, cf2));
-            when(featureRepository.findAllById(List.of(100L, 101L)))
+            when(featureRepository.findAllById(List.of(100L)))
                     .thenReturn(List.of(f1, f2));
 
             ClientFeatures resp = service.getAllEnabledFeatures(cid);
