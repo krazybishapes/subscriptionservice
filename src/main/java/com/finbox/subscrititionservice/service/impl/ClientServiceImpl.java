@@ -1,5 +1,6 @@
 package com.finbox.subscrititionservice.service.impl;
 
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
@@ -8,10 +9,12 @@ import com.finbox.subscrititionservice.service.ClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Service
 public class ClientServiceImpl implements ClientService {
     private static final Logger log = LoggerFactory.getLogger(ClientServiceImpl.class);
     private final ClientRepository clientRepository;
@@ -21,16 +24,28 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientResponse createClient(ClientRequest clientRequest) {
+    public ClientResponse createClient(ClientRequest clientRequest) throws SubscriptionServiceException {
         if (clientRequest == null) {
             log.warn("Client request is null");
-            return ClientResponse.builder().build();
+            throw new SubscriptionServiceException(
+                    "Client request cannot be null",
+                    HttpStatus.BAD_REQUEST.value()
+            );
         }
 
         log.info("Creating new client: {}", clientRequest.getEmail());
         String clientId = UUID.randomUUID().toString();
         clientRequest.setClientId(clientId);
         Client client = clientRepository.save(clientRequest.toClient());
+
+        if(Objects.isNull(client)) {
+            log.error("Failed to create client");
+            throw new SubscriptionServiceException(
+                    "Failed to create client",
+                    HttpStatus.INTERNAL_SERVER_ERROR.value()
+            );
+
+        }
         return ClientResponse
                 .builder()
                 .clientId(client.getClientId())

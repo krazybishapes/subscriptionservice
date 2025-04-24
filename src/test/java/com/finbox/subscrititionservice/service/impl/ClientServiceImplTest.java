@@ -1,11 +1,13 @@
 package com.finbox.subscrititionservice.service.impl;
 
 
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
 import com.finbox.subscrititionservice.models.response.CommonResponse;
 import com.finbox.subscrititionservice.repositories.ClientRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -14,8 +16,9 @@ import org.springframework.context.annotation.Description;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
@@ -26,20 +29,22 @@ class ClientServiceImplTest {
     private final ClientServiceImpl clientService = new ClientServiceImpl(clientRepository);
 
     @Test
-    @Description("Test case for creating a client with null request")
-    void testCreateClient_NullRequest() {
-        // Act
-        ClientResponse response = clientService.createClient(null);
+    @DisplayName("Test case for creating a client with null request")
+    void testCreateClient_NullRequest() throws SubscriptionServiceException {
+        // Act & Assert
+        SubscriptionServiceException ex =
+                assertThrows(SubscriptionServiceException.class,
+                        () -> clientService.createClient(null),
+                        "Expected createClient(null) to throw");
 
-        // Assert
-        assertNotNull("Response should not be null", response);
-        assertEquals("Client ID should be null", null, response.getClientId());
+        // Optional: verify details on the exception
+        assertEquals("Request may not be null", ex.getMessage(),"Client request cannot be null");
 
     }
 
     @Test
-    @Description("Test case for creating a client successfully")
-    void testCreateClient_Success() {
+    @DisplayName("Test case for creating a client successfully")
+    void testCreateClient_Success() throws SubscriptionServiceException {
         // Arrange
         ClientRequest clientRequest = mock(ClientRequest.class); // Mock the ClientRequest object
 
@@ -75,7 +80,7 @@ class ClientServiceImplTest {
 
 
     @Test
-    @Description("Test case for duplicate email id failure")
+    @DisplayName("Test case for duplicate email id failure")
     void testCreateClient_failure() {
         // Arrange
         ClientRequest clientRequest = mock(ClientRequest.class); // Mock the ClientRequest object
@@ -113,4 +118,37 @@ class ClientServiceImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> clientService.createClient(clientRequest));
         assertEquals("Duplicate email ID", exception.getMessage(),"Duplicate email ID");
     }
+
+    @Test
+    @DisplayName("createClient should throw when repository returns null")
+    void testCreateClient_NullClientFromRepository() {
+
+        // Arrange
+        ClientRequest clientRequest = mock(ClientRequest.class);
+
+        String clientId = UUID.randomUUID().toString();
+        when(clientRequest.getClientId()).thenReturn(clientId);
+        when(clientRequest.getName()).thenReturn("Test Client");
+        when(clientRequest.getEmail()).thenReturn("test@gmail.com");
+        when(clientRequest.getPhone()).thenReturn("1234567890");
+        when(clientRequest.toClient()).thenReturn(new Client());
+
+        // repository.save(..) returns null  ➜ should trigger error handling
+        when(clientRepository.save(any(Client.class))).thenReturn(null);
+
+        // Act & Assert
+        SubscriptionServiceException ex = assertThrows(
+                SubscriptionServiceException.class,
+                () -> clientService.createClient(clientRequest),
+                "Expected createClient() to throw when repo.save() returns null");
+
+        // Optional: verify diagnostic message
+        assertTrue(ex.getMessage().contains("Failed to create client"),
+                "Exception message should indicate why persisting failed");
+
+        // Optional: verify interactions
+        verify(clientRepository).save(any(Client.class));
+        verifyNoMoreInteractions(clientRepository);
+    }
+
 }
