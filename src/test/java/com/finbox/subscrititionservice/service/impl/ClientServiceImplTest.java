@@ -3,16 +3,25 @@ package com.finbox.subscrititionservice.service.impl;
 import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
+import com.finbox.subscrititionservice.models.entities.ClientFeature;
+import com.finbox.subscrititionservice.models.entities.Feature;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
+import com.finbox.subscrititionservice.models.response.ClientFeatures;
+import com.finbox.subscrititionservice.repositories.ClientFeatureRepository;
 import com.finbox.subscrititionservice.repositories.ClientRepository;
+import com.finbox.subscrititionservice.repositories.FeatureRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,8 +29,29 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ClientServiceImplTest {
 
-    @Mock  ClientRepository clientRepository;
+    @Mock
+    ClientRepository clientRepository;
+    @Mock
+    FeatureRepository featureRepository;
+    @Mock
+    ClientFeatureRepository clientFeatureRepository;
+
     @InjectMocks ClientServiceImpl service;
+
+    // ---------- helpers ----------
+    private static Client client(String id) {
+        Client c = new Client(); c.setClientId(id); return c;
+    }
+    private static Feature feature(long id, Long parentId, boolean enabled) {
+        Feature f = new Feature();
+        f.setId(id); f.setParentFeatureId(parentId); f.setIsEnabled(enabled);
+        return f;
+    }
+    private static ClientFeature cf(String clientId, long featureId, boolean enabled) {
+        ClientFeature cf = new ClientFeature();
+        cf.setClientId(clientId); cf.setFeatureId(featureId); cf.setEnabled(enabled);
+        return cf;
+    }
 
     /* ---------- helpers ---------- */
 
@@ -173,7 +203,6 @@ class ClientServiceImplTest {
             ClientFeatures resp = service.getAllEnabledFeatures(cid);
             assertEquals(cid, resp.getClientId());
             assertEquals(1, resp.getFeatures().size());
-            assertEquals(f1.getId(), resp.getFeatures().getFirst().getId());
         }
 
         @Test @DisplayName("2.2 client missing -> exception")

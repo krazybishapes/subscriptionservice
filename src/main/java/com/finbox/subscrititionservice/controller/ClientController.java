@@ -4,6 +4,7 @@ package com.finbox.subscrititionservice.controller;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
+import com.finbox.subscrititionservice.models.response.ClientFeatures;
 import com.finbox.subscrititionservice.models.response.CommonResponse;
 import com.finbox.subscrititionservice.service.ClientService;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,52 @@ public class ClientController {
                 .data(clientResponse)
                 .build();
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{clientId}/features/{featureId}/toggle")
+    public ResponseEntity<?> toggleFeature(
+            @PathVariable String clientId,
+            @PathVariable Long featureId,
+            @RequestParam boolean enable) {
+        String response = clientService.toggleFeatureForClient(clientId, featureId, enable);
+        CommonResponse commonResponse = CommonResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Feature toggled successfully")
+                .success(true)
+                .data(response)
+                .build();
+        return ResponseEntity.ok(commonResponse);
+    }
+
+    @GetMapping("/{clientId}/features")
+    public ResponseEntity<?> getAllEnabledFeatures(
+            @PathVariable String clientId) {
+        ClientFeatures response = clientService.getAllEnabledFeatures(clientId);
+
+        CommonResponse commonResponse = CommonResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .status("success")
+                .success(true)
+                .message("Fetched all enabled client feature successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.ok(commonResponse);
+    }
+
+    @GetMapping("/{clientId}/features/status")
+    public ResponseEntity<?> getFeatureFlagStatus(
+            @PathVariable String clientId,
+            @RequestParam Long featureId) {
+        boolean isEnabled = clientService.getFeatureFlagStatus(clientId, featureId);
+
+        CommonResponse commonResponse = CommonResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .status("success")
+                .message("Fetched feature status successfully")
+                .data(isEnabled)
+                .success(true)
+                .build();
+        return ResponseEntity.ok(commonResponse);
     }
 
 
