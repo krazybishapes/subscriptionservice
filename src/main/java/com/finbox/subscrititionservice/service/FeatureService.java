@@ -1,9 +1,11 @@
-package com.finbox.subscriptionsvc.service;
+package com.finbox.subscrititionservice.service;
 
 
-import com.finbox.subscriptionsvc.model.entity.Feature;
-import com.finbox.subscriptionsvc.model.request.FeatureRequest;
-import com.finbox.subscriptionsvc.model.response.CommonResponse;
+
+
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
+import com.finbox.subscrititionservice.models.entities.Feature;
+import com.finbox.subscrititionservice.models.request.FeatureRequest;
 
 import java.util.List;
 
@@ -12,5 +14,5 @@ public interface FeatureService {
     boolean isFeatureEnabled(String featureCode);
     Feature toggleFeature(String code, boolean flag);
 
-    List<Feature> getAllFeatureFlag();
+    List<Feature> getAllFeatureFlag() throws SubscriptionServiceException;
 }

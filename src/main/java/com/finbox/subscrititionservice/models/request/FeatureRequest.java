@@ -1,7 +1,8 @@
-package com.finbox.subscriptionsvc.model.request;
+package com.finbox.subscrititionservice.models.request;
 
 
-import com.finbox.subscriptionsvc.model.entity.Feature;
+
+import com.finbox.subscrititionservice.models.entities.Feature;
 import lombok.Data;
 import lombok.Getter;
 

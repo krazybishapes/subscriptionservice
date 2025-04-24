@@ -1,12 +1,14 @@
-package com.finbox.subscriptionsvc.service.impl;
+package com.finbox.subscrititionservice.service.impl;
 
-import com.finbox.subscriptionsvc.model.entity.Feature;
-import com.finbox.subscriptionsvc.model.request.FeatureRequest;
-import com.finbox.subscriptionsvc.model.response.CommonResponse;
-import com.finbox.subscriptionsvc.repository.FeatureRepository;
-import com.finbox.subscriptionsvc.service.FeatureService;
+
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
+import com.finbox.subscrititionservice.models.entities.Feature;
+import com.finbox.subscrititionservice.models.request.FeatureRequest;
+import com.finbox.subscrititionservice.repositories.FeatureRepository;
+import com.finbox.subscrititionservice.service.FeatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 @Service
 public class FeatureServiceImpl implements FeatureService {
+
 
     private final FeatureRepository featureRepository;
 
@@ -97,15 +100,15 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     @Override
-    public List<Feature> getAllFeatureFlag() {
-        //find all features if enabled
-        log.info("Fetching all features");
+    public List<Feature> getAllFeatureFlag() throws SubscriptionServiceException {
+
         List<Feature> features = featureRepository.findAll();
         if (features.isEmpty()) {
-            throw new RuntimeException("No features found");
+            throw new SubscriptionServiceException("No features found", HttpStatus.NO_CONTENT.value());
         }
-        features.removeIf(feature -> !feature.getIsEnabled());
-        return features;
+        return features.stream()
+                .filter(Feature::getIsEnabled)
+                .toList();
     }
 
 

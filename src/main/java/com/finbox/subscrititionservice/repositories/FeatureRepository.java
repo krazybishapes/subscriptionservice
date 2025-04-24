@@ -1,7 +1,8 @@
-package com.finbox.subscriptionsvc.repository;
+package com.finbox.subscrititionservice.repositories;
 
 
-import com.finbox.subscriptionsvc.model.entity.Feature;
+
+import com.finbox.subscrititionservice.models.entities.Feature;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

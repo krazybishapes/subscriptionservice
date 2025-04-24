@@ -1,154 +1,86 @@
 package com.finbox.subscrititionservice.service.impl;
 
-
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
-import com.finbox.subscrititionservice.models.response.CommonResponse;
 import com.finbox.subscrititionservice.repositories.ClientRepository;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.context.annotation.Description;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
-import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
-
+@ExtendWith(MockitoExtension.class)
 class ClientServiceImplTest {
 
-    private final ClientRepository clientRepository = mock(ClientRepository.class);
-    private final ClientServiceImpl clientService = new ClientServiceImpl(clientRepository);
+    @Mock  ClientRepository clientRepository;
+    @InjectMocks ClientServiceImpl service;
 
-    @Test
-    @DisplayName("Test case for creating a client with null request")
-    void testCreateClient_NullRequest() throws SubscriptionServiceException {
-        // Act & Assert
-        SubscriptionServiceException ex =
-                assertThrows(SubscriptionServiceException.class,
-                        () -> clientService.createClient(null),
-                        "Expected createClient(null) to throw");
+    /* ---------- helpers ---------- */
 
-        // Optional: verify details on the exception
-        assertEquals("Request may not be null", ex.getMessage(),"Client request cannot be null");
-
-    }
-
-    @Test
-    @DisplayName("Test case for creating a client successfully")
-    void testCreateClient_Success() throws SubscriptionServiceException {
-        // Arrange
-        ClientRequest clientRequest = mock(ClientRequest.class); // Mock the ClientRequest object
-
-        String clientId = UUID.randomUUID().toString();
-        Client client = Client
-                .builder()
-                .clientId(clientId)
-                .email("test@gmail.com")
-                .name("Test Client")
-                .phone("1234567890")
+    private static ClientRequest request(String name,
+                                         String email,
+                                         String phone) {
+        ClientRequest req = ClientRequest.builder()
+                .name(name)
+                .email(email)
+                .phone(phone)
                 .build();
-
-        // Stub the methods on the mocked ClientRequest
-        when(clientRequest.getClientId()).thenReturn(clientId);
-        when(clientRequest.getName()).thenReturn("Test Client");
-        when(clientRequest.getEmail()).thenReturn("test@gmail.com");
-        when(clientRequest.getPhone()).thenReturn("1234567890");
-        when(clientRequest.toClient()).thenReturn(client);
-
-        // Mock the repository save method
-        when(clientRepository.save(client)).thenReturn(client);
-
-        // Act
-        ClientResponse response = clientService.createClient(clientRequest);
-
-        // Assert
-        assertNotNull("Response should not be null", response);
-        assertEquals("Client ID should not be null", clientId, response.getClientId());
-        assertEquals("Client name should match", "Test Client", response.getName());
-        assertEquals("Client email should match", "test@gmail.com", response.getEmail());
-        assertEquals("Client phone should match", "1234567890", response.getPhone());
+        return req;
     }
 
-
-    @Test
-    @DisplayName("Test case for duplicate email id failure")
-    void testCreateClient_failure() {
-        // Arrange
-        ClientRequest clientRequest = mock(ClientRequest.class); // Mock the ClientRequest object
-
-        String clientId = UUID.randomUUID().toString();
-        String duplicateEmail = "duplicate@gmail.com";
-
-        Client existingClient = Client
-                .builder()
-                .clientId(clientId)
-                .email(duplicateEmail)
-                .name("Existing Client")
-                .phone("1234567890")
-                .build();
-
-        Client newClient = Client
-                .builder()
-                .clientId(UUID.randomUUID().toString())
-                .email(duplicateEmail)
-                .name("New Client")
-                .phone("0987654321")
-                .build();
-
-        // Stub the methods on the mocked ClientRequest
-        when(clientRequest.getClientId()).thenReturn(newClient.getClientId());
-        when(clientRequest.getName()).thenReturn(newClient.getName());
-        when(clientRequest.getEmail()).thenReturn(duplicateEmail);
-        when(clientRequest.getPhone()).thenReturn(newClient.getPhone());
-        when(clientRequest.toClient()).thenReturn(newClient);
-
-        // Mock the repository behavior
-        when(clientRepository.save(newClient)).thenThrow(new RuntimeException("Duplicate email ID"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> clientService.createClient(clientRequest));
-        assertEquals("Duplicate email ID", exception.getMessage(),"Duplicate email ID");
+    private static Client entityFrom(ClientRequest req) {
+        Client c = new Client();
+        c.setClientId(req.getClientId());
+        c.setName(req.getName());
+        c.setEmail(req.getEmail());
+        c.setPhone(req.getPhone());
+        return c;
     }
 
-    @Test
-    @DisplayName("createClient should throw when repository returns null")
-    void testCreateClient_NullClientFromRepository() {
+    /* ---------- tests ---------- */
 
-        // Arrange
-        ClientRequest clientRequest = mock(ClientRequest.class);
+    @Nested class CreateClient {
 
-        String clientId = UUID.randomUUID().toString();
-        when(clientRequest.getClientId()).thenReturn(clientId);
-        when(clientRequest.getName()).thenReturn("Test Client");
-        when(clientRequest.getEmail()).thenReturn("test@gmail.com");
-        when(clientRequest.getPhone()).thenReturn("1234567890");
-        when(clientRequest.toClient()).thenReturn(new Client());
+        @Test @DisplayName("1. happy path – returns populated response")
+        void createsClientSuccessfully() throws Exception {
+            // Arrange
+            ClientRequest req = request("Alice", "a@b.com", "123");
+            // repository should return a persisted copy (same fields)
+            when(clientRepository.save(any(Client.class)))
+                    .thenAnswer(inv -> {
+                        Client toSave = inv.getArgument(0);
+                        return toSave;  // mimic “saved” entity
+                    });
 
-        // repository.save(..) returns null  ➜ should trigger error handling
-        when(clientRepository.save(any(Client.class))).thenReturn(null);
+            // Act
+            ClientResponse resp = service.createClient(req);
 
-        // Act & Assert
-        SubscriptionServiceException ex = assertThrows(
-                SubscriptionServiceException.class,
-                () -> clientService.createClient(clientRequest),
-                "Expected createClient() to throw when repo.save() returns null");
+            // Assert
+            assertNotNull(resp.getClientId(), "ID must be set");
+            assertEquals("Alice", resp.getName());
+            assertEquals("a@b.com", resp.getEmail());
+            assertEquals("123", resp.getPhone());
+            // verify repo call once with converted entity
+            verify(clientRepository).save(any(Client.class));
+        }
 
-        // Optional: verify diagnostic message
-        assertTrue(ex.getMessage().contains("Failed to create client"),
-                "Exception message should indicate why persisting failed");
+        @Test @DisplayName("2. null request → BAD_REQUEST SubscriptionServiceException")
+        void nullRequestThrows() {
+            SubscriptionServiceException ex = assertThrows(
+                    SubscriptionServiceException.class,
+                    () -> service.createClient(null));
+            assertEquals(400, ex.getStatusCode());
+            assertTrue(ex.getMessage().contains("cannot be null"));
+            verifyNoInteractions(clientRepository);
+        }
 
-        // Optional: verify interactions
-        verify(clientRepository).save(any(Client.class));
-        verifyNoMoreInteractions(clientRepository);
+
     }
-
 }

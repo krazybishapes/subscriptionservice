@@ -1,4 +1,4 @@
-package com.finbox.subscriptionsvc.model.entity;
+package com.finbox.subscrititionservice.models.entities;
 
 
 import jakarta.persistence.*;

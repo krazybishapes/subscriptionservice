@@ -1,10 +1,12 @@
-package com.finbox.subscriptionsvc.controller;
+package com.finbox.subscrititionservice.controller;
 
 
-import com.finbox.subscriptionsvc.model.entity.Feature;
-import com.finbox.subscriptionsvc.model.request.FeatureRequest;
-import com.finbox.subscriptionsvc.model.response.CommonResponse;
-import com.finbox.subscriptionsvc.service.FeatureService;
+
+import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
+import com.finbox.subscrititionservice.models.entities.Feature;
+import com.finbox.subscrititionservice.models.request.FeatureRequest;
+import com.finbox.subscrititionservice.models.response.CommonResponse;
+import com.finbox.subscrititionservice.service.FeatureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -67,7 +69,7 @@ public class FeatureController {
 
 
     @GetMapping("/toggles")
-    public ResponseEntity<?> getAllFeatureFlag() {
+    public ResponseEntity<?> getAllFeatureFlag() throws SubscriptionServiceException {
         List<Feature> feature = featureService.getAllFeatureFlag();
         CommonResponse response = CommonResponse.builder()
                 .status("success")

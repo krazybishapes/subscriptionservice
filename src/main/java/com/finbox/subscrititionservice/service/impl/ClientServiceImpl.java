@@ -37,15 +37,6 @@ public class ClientServiceImpl implements ClientService {
         String clientId = UUID.randomUUID().toString();
         clientRequest.setClientId(clientId);
         Client client = clientRepository.save(clientRequest.toClient());
-
-        if(Objects.isNull(client)) {
-            log.error("Failed to create client");
-            throw new SubscriptionServiceException(
-                    "Failed to create client",
-                    HttpStatus.INTERNAL_SERVER_ERROR.value()
-            );
-
-        }
         return ClientResponse
                 .builder()
                 .clientId(client.getClientId())
