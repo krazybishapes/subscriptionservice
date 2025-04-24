@@ -14,34 +14,37 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<?> handleNotFound(ResourceNotFoundException ex) {
-        return new ResponseEntity<>(
-                CommonResponse.builder()
-                        .status("error")
-                        .errorCode(String.valueOf(HttpStatus.NOT_FOUND.value()))
-                        .errorMessage(ex.getMessage())
-                        .data(null)
-                        .build(),
-                HttpStatus.NOT_FOUND
-        );
-    }
+
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<CommonResponse> handleException(Exception ex) {
-        // Log the exception
-        log.error("Unhandled error occurred: {}", ex.getMessage());
+    public ResponseEntity<CommonResponse> handleSubscriptionException(Exception ex) {
+        // Default to 500 INTERNAL_SERVER_ERROR
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        String message = ex.getMessage();
 
-        // Return a response with 500 status code and a generic error message
+        // Customize status based on exception type
+        if (ex instanceof ResourceNotFoundException) {
+            status = HttpStatus.NOT_FOUND;
+        } else if (ex instanceof InvalidRequestException) {
+            status = HttpStatus.BAD_REQUEST;
+        } else if(ex instanceof SubscriptionServiceException) {
+            message = ex.getMessage();
+        }else{
+            message = "An unexpected error occurred";
+        }
+
+        log.error("Handled SubscriptionServiceException: {}", ex.getMessage());
+
         return new ResponseEntity<>(
                 CommonResponse.builder()
                         .status("error")
-                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                        .message(ex.getMessage())
+                        .statusCode(status.value())
+                        .message(message)
                         .data(null)
                         .build(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                status
         );
     }
+
 }
 

@@ -1,5 +1,6 @@
 package com.finbox.subscrititionservice.service.impl;
 
+import com.finbox.subscrititionservice.exception.InvalidRequestException;
 import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
@@ -42,9 +43,8 @@ public class ClientServiceImpl implements ClientService {
     public ClientResponse createClient(ClientRequest clientRequest) throws SubscriptionServiceException {
         if (clientRequest == null) {
             log.warn("Client request is null");
-            throw new SubscriptionServiceException(
-                    "Client request cannot be null",
-                    HttpStatus.BAD_REQUEST.value()
+            throw new InvalidRequestException(
+                    "Client request cannot be null"
             );
         }
 
@@ -151,7 +151,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientFeatures getAllEnabledFeatures(String clientId) {
+    public ClientFeatures getAllEnabledFeatures(String clientId) throws ResourceNotFoundException {
         log.info("Fetching all enabled features for client {}", clientId);
         Client client = clientRepository.findByClientId(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
@@ -185,7 +185,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public boolean getFeatureFlagStatus(String clientId, Long featureId) {
+    public boolean getFeatureFlagStatus(String clientId, Long featureId) throws ResourceNotFoundException {
         log.info("Fetching feature flag status for client {} and feature {}", clientId, featureId);
         ClientFeature clientFeature = clientFeatureRepository
                 .findByClientIdAndFeatureId(clientId, featureId);

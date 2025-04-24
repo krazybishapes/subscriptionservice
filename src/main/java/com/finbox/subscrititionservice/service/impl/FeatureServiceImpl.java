@@ -1,6 +1,8 @@
 package com.finbox.subscrititionservice.service.impl;
 
 
+import com.finbox.subscrititionservice.exception.InvalidRequestException;
+import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Feature;
 import com.finbox.subscrititionservice.models.request.FeatureRequest;
@@ -28,19 +30,19 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     @Override
-    public Feature createFeature(FeatureRequest request) {
+    public Feature createFeature(FeatureRequest request) throws SubscriptionServiceException {
         log.info("Creating feature with request: {}", request);
         if (request.getCode() == null) {
             throw new IllegalArgumentException("Feature code must not be null");
         }
 
         if (featureRepository.findByCode(request.getCode()).isPresent()) {
-            throw new RuntimeException("Feature with code " + request.getCode() + " already exists");
+            throw new InvalidRequestException("Feature with code " + request.getCode() + " already exists");
         }
 
 
         if (request.getParentFeatureId() != null && featureRepository.findById(request.getParentFeatureId()).isEmpty()) {
-            throw new RuntimeException("Parent feature not found");
+            throw new SubscriptionServiceException("Parent feature not found");
         }
         Feature feature = featureRepository.save(request.createFeature());
         log.info("Feature created: {}", feature);
@@ -48,10 +50,10 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     @Override
-    public boolean isFeatureEnabled(String featureCode) {
+    public boolean isFeatureEnabled(String featureCode) throws SubscriptionServiceException {
         Optional<Feature> feature = featureRepository.findByCode(featureCode);
         if(!feature.isPresent()){
-            throw new RuntimeException("Feature not found");
+            throw new ResourceNotFoundException("Feature not found");
         }
         return feature.get()
                 .getIsEnabled() != null && feature.get().getIsEnabled();
@@ -61,9 +63,9 @@ public class FeatureServiceImpl implements FeatureService {
 
     @Override
     @Transactional
-    public Feature toggleFeature(String code, boolean flag) {
+    public Feature toggleFeature(String code, boolean flag) throws SubscriptionServiceException {
         Feature feature = featureRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Feature not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Feature not found"));
 
         /**
          * Toggle feature for all dependent child is toggling for a parent feature
@@ -86,10 +88,10 @@ public class FeatureServiceImpl implements FeatureService {
             if(parentFeature.isPresent()){
                 Feature parent = parentFeature.get();
                 if(!parent.getIsEnabled()){
-                    throw new RuntimeException("Parent feature is not enabled");
+                    throw new SubscriptionServiceException("Parent feature is not enabled");
                 }
             }else{
-                throw new RuntimeException("Parent feature not found");
+                throw new SubscriptionServiceException("Parent feature not found");
             }
 
 

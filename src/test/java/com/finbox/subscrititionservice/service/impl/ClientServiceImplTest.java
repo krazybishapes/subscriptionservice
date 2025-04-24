@@ -1,5 +1,6 @@
 package com.finbox.subscrititionservice.service.impl;
 
+import com.finbox.subscrititionservice.exception.InvalidRequestException;
 import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Client;
@@ -104,10 +105,9 @@ class ClientServiceImplTest {
 
         @Test @DisplayName("2. null request → BAD_REQUEST SubscriptionServiceException")
         void nullRequestThrows() {
-            SubscriptionServiceException ex = assertThrows(
-                    SubscriptionServiceException.class,
+            InvalidRequestException ex = assertThrows(
+                    InvalidRequestException.class,
                     () -> service.createClient(null));
-            assertEquals(400, ex.getStatusCode());
             assertTrue(ex.getMessage().contains("cannot be null"));
             verifyNoInteractions(clientRepository);
         }
@@ -187,7 +187,7 @@ class ClientServiceImplTest {
     @Nested class GetAllEnabled {
 
         @Test @DisplayName("2.1 returns only enabled")
-        void returnsEnabledList() {
+        void returnsEnabledList() throws ResourceNotFoundException {
             String cid = "C4";
             Client c = client(cid);
             ClientFeature cf1 = cf(cid, 100L, true);
@@ -235,14 +235,14 @@ class ClientServiceImplTest {
     @Nested class FlagStatus {
 
         @Test @DisplayName("3.1 returns true when enabled")
-        void enabled() {
+        void enabled() throws ResourceNotFoundException {
             when(clientFeatureRepository.findByClientIdAndFeatureId("C6", 1L))
                     .thenReturn(cf("C6", 1L, true));
             assertTrue(service.getFeatureFlagStatus("C6", 1L));
         }
 
         @Test @DisplayName("3.2 returns false when disabled")
-        void disabled() {
+        void disabled() throws ResourceNotFoundException {
             when(clientFeatureRepository.findByClientIdAndFeatureId("C7", 2L))
                     .thenReturn(cf("C7", 2L, false));
             assertFalse(service.getFeatureFlagStatus("C7", 2L));

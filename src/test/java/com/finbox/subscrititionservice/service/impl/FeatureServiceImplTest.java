@@ -1,6 +1,7 @@
 package com.finbox.subscrititionservice.service.impl;
 
 
+import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.entities.Feature;
 import com.finbox.subscrititionservice.models.request.FeatureRequest;
@@ -64,7 +65,7 @@ class FeatureServiceImplTest {
     @Nested class CreateFeature {
 
         @Test @DisplayName("1.1 saves new feature without parent")
-        void create_withoutParent() {
+        void create_withoutParent() throws SubscriptionServiceException {
             FeatureRequest r = req("CODE_A", null, "name");
 
             when(featureRepository.findByCode("CODE_A"))
@@ -82,7 +83,7 @@ class FeatureServiceImplTest {
         }
 
         @Test @DisplayName("1.2 saves with valid parent")
-        void create_withParent() {
+        void create_withParent() throws SubscriptionServiceException {
             Feature parent = feature(3L, "PARENT", null, true);
             FeatureRequest r = req("CODE_B", 3L, "child");
 
@@ -109,19 +110,19 @@ class FeatureServiceImplTest {
             verifyNoInteractions(featureRepository);
         }
 
-        @Test @DisplayName("1.4 duplicate code → RuntimeException")
+        @Test @DisplayName("1.4 duplicate code → SubscriptionServiceException")
         void duplicate_code() {
             FeatureRequest r = req("DUP", null, "x");
             when(featureRepository.findByCode("DUP"))
                     .thenReturn(Optional.of(feature(1L, "DUP", null, false)));
 
-            RuntimeException ex =
-                    assertThrows(RuntimeException.class,
+            SubscriptionServiceException ex =
+                    assertThrows(SubscriptionServiceException.class,
                             () -> service.createFeature(r));
             assertTrue(ex.getMessage().contains("already exists"));
         }
 
-        @Test @DisplayName("1.5 missing parent → RuntimeException")
+        @Test @DisplayName("1.5 missing parent → SubscriptionServiceException")
         void missing_parent() {
             FeatureRequest r = req("CHILD", 42L, "x");
             when(featureRepository.findByCode("CHILD"))
@@ -129,8 +130,8 @@ class FeatureServiceImplTest {
             when(featureRepository.findById(42L))
                     .thenReturn(Optional.empty());
 
-            RuntimeException ex =
-                    assertThrows(RuntimeException.class,
+            SubscriptionServiceException ex =
+                    assertThrows(SubscriptionServiceException.class,
                             () -> service.createFeature(r));
             assertTrue(ex.getMessage().contains("Parent feature not found"));
         }
@@ -141,14 +142,14 @@ class FeatureServiceImplTest {
     @Nested class IsFeatureEnabled {
 
         @Test @DisplayName("2.1 enabled feature returns true")
-        void enabled() {
+        void enabled() throws SubscriptionServiceException {
             when(featureRepository.findByCode("ON"))
                     .thenReturn(Optional.of(feature(1L,"ON",null,true)));
             assertTrue(service.isFeatureEnabled("ON"));
         }
 
         @Test @DisplayName("2.2 disabled or null flag returns false")
-        void disabled_orNull() {
+        void disabled_orNull() throws SubscriptionServiceException {
             when(featureRepository.findByCode("OFF"))
                     .thenReturn(Optional.of(feature(2L,"OFF",null,false)));
             assertFalse(service.isFeatureEnabled("OFF"));
@@ -162,7 +163,7 @@ class FeatureServiceImplTest {
         void absent() {
             when(featureRepository.findByCode("X"))
                     .thenReturn(Optional.empty());
-            assertThrows(RuntimeException.class,
+            assertThrows(ResourceNotFoundException.class,
                     () -> service.isFeatureEnabled("X"));
         }
     }
@@ -172,7 +173,7 @@ class FeatureServiceImplTest {
     @Nested class ToggleFeatureParent {
 
         @Test @DisplayName("3.1 parent ON propagates to children")
-        void parent_on() {
+        void parent_on() throws SubscriptionServiceException {
             Feature parent = feature(10L,"PAR",null,false);
             Feature c1 = feature(11L,"C1",10L,false);
             Feature c2 = feature(12L,"C2",10L,false);
@@ -194,7 +195,7 @@ class FeatureServiceImplTest {
         }
 
         @Test @DisplayName("3.2 parent OFF propagates to children")
-        void parent_off() {
+        void parent_off() throws SubscriptionServiceException {
             Feature parent = feature(20L,"PA",null,true);
             Feature child = feature(21L,"CH",20L,true);
 
@@ -213,7 +214,7 @@ class FeatureServiceImplTest {
         void parent_absent() {
             when(featureRepository.findByCode("NONE"))
                     .thenReturn(Optional.empty());
-            assertThrows(RuntimeException.class,
+            assertThrows(SubscriptionServiceException.class,
                     () -> service.toggleFeature("NONE",true));
         }
     }
@@ -221,7 +222,7 @@ class FeatureServiceImplTest {
     @Nested class ToggleFeatureChild {
 
         @Test @DisplayName("3.4 parent ON → toggle child ON")
-        void child_on_parent_on() {
+        void child_on_parent_on() throws SubscriptionServiceException {
             Feature child = feature(30L,"CHILD",40L,false);
             Feature parent = feature(40L,"PAR",null,true);
 
@@ -237,7 +238,7 @@ class FeatureServiceImplTest {
         }
 
         @Test @DisplayName("3.5 parent ON → toggle child OFF")
-        void child_off_parent_on() {
+        void child_off_parent_on() throws SubscriptionServiceException {
             Feature child = feature(31L,"CHILD2",41L,true);
             Feature parent = feature(41L,"PAR2",null,true);
 
@@ -262,8 +263,8 @@ class FeatureServiceImplTest {
             when(featureRepository.findById(42L))
                     .thenReturn(Optional.of(parent));
 
-            RuntimeException ex =
-                    assertThrows(RuntimeException.class,
+            SubscriptionServiceException ex =
+                    assertThrows(SubscriptionServiceException.class,
                             () -> service.toggleFeature("CHILD3",true));
             assertTrue(ex.getMessage().contains("Parent feature is not enabled"));
         }
@@ -276,7 +277,7 @@ class FeatureServiceImplTest {
             when(featureRepository.findById(43L))
                     .thenReturn(Optional.empty());
 
-            assertThrows(RuntimeException.class,
+            assertThrows(SubscriptionServiceException.class,
                     () -> service.toggleFeature("CHILD4",true));
         }
     }

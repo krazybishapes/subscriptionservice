@@ -26,8 +26,14 @@ public class FeatureController {
         this.featureService = featureService;
     }
 
+    /**
+     * Create a new feature
+     *
+     * @param request
+     * @return
+     */
     @PostMapping
-    public ResponseEntity<?> createFeature(@RequestBody FeatureRequest request) {
+    public ResponseEntity<?> createFeature(@RequestBody FeatureRequest request) throws SubscriptionServiceException {
         log.info("Creating feature with request: {}", request);
         Feature feature = featureService.createFeature(request);
         CommonResponse created = CommonResponse.builder()
@@ -40,9 +46,14 @@ public class FeatureController {
         return ResponseEntity.ok(created);
     }
 
+    /**
+     * * Get all features
+     * @param code
+     * @return
+     */
 
     @GetMapping("/{code}/enabled")
-    public ResponseEntity<?> isFeatureEnabled(@PathVariable String code) {
+    public ResponseEntity<?> isFeatureEnabled(@PathVariable String code) throws SubscriptionServiceException {
         boolean flag =  featureService.isFeatureEnabled(code);
         CommonResponse created = CommonResponse.builder()
                 .status("success")
@@ -54,8 +65,15 @@ public class FeatureController {
         return ResponseEntity.ok(created);
     }
 
+    /**
+     * * Toggle a feature
+     * @param code
+     * @param enable
+     * @return
+     */
+
     @PostMapping("/{code}/toggle")
-    public ResponseEntity<?> toggleFeature(@PathVariable String code, @RequestParam boolean enable) {
+    public ResponseEntity<?> toggleFeature(@PathVariable String code, @RequestParam boolean enable) throws SubscriptionServiceException {
         Feature feature = featureService.toggleFeature(code, enable);
         CommonResponse response = CommonResponse.builder()
                 .status("success")
@@ -67,6 +85,11 @@ public class FeatureController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * * Get all feature flags
+     * @return
+     * @throws SubscriptionServiceException
+     */
 
     @GetMapping("/toggles")
     public ResponseEntity<?> getAllFeatureFlag() throws SubscriptionServiceException {

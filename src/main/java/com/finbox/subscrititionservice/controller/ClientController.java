@@ -1,6 +1,7 @@
 package com.finbox.subscrititionservice.controller;
 
 
+import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
@@ -21,6 +22,12 @@ public class ClientController {
         this.clientService = clientService;
     }
 
+    /**
+     * * Create a new client
+     * @param client
+     * @return
+     * @throws SubscriptionServiceException
+     */
     @PostMapping
     public ResponseEntity<CommonResponse> createClient(@RequestBody ClientRequest client) throws SubscriptionServiceException {
 
@@ -34,6 +41,14 @@ public class ClientController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    /**
+     * * Toggle a feature for a client
+     * @param clientId
+     * @param featureId
+     * @param enable
+     * @return
+     * @throws SubscriptionServiceException
+     */
     @PostMapping("/{clientId}/features/{featureId}/toggle")
     public ResponseEntity<?> toggleFeature(
             @PathVariable String clientId,
@@ -49,9 +64,14 @@ public class ClientController {
         return ResponseEntity.ok(commonResponse);
     }
 
+    /**
+     * * Get all enabled features for a client
+     * @param clientId
+     * @return
+     */
     @GetMapping("/{clientId}/features")
     public ResponseEntity<?> getAllEnabledFeatures(
-            @PathVariable String clientId) {
+            @PathVariable String clientId) throws ResourceNotFoundException {
         ClientFeatures response = clientService.getAllEnabledFeatures(clientId);
 
         CommonResponse commonResponse = CommonResponse.builder()
@@ -64,10 +84,16 @@ public class ClientController {
         return ResponseEntity.ok(commonResponse);
     }
 
+    /**
+     * * Get the status of a feature flag for a client
+     * @param clientId
+     * @param featureId
+     * @return
+     */
     @GetMapping("/{clientId}/features/status")
     public ResponseEntity<?> getFeatureFlagStatus(
             @PathVariable String clientId,
-            @RequestParam Long featureId) {
+            @RequestParam Long featureId) throws ResourceNotFoundException {
         boolean isEnabled = clientService.getFeatureFlagStatus(clientId, featureId);
 
         CommonResponse commonResponse = CommonResponse.builder()
