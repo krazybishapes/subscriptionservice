@@ -63,7 +63,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    public String toggleFeatureForClient(String clientId, Long featureId, boolean enable) {
+    public String toggleFeatureForClient(String clientId, Long featureId, boolean enable) throws SubscriptionServiceException {
         log.info("Toggling feature {} for client {} - enable: {}", featureId, clientId, enable);
 
         /**
@@ -78,6 +78,11 @@ public class ClientServiceImpl implements ClientService {
         //STEP2: Validate if feature is valid
         Feature feature = featureRepository.findById(featureId)
                 .orElseThrow(() -> new ResourceNotFoundException("Feature not found with id: " + featureId));
+
+        if(!feature.isEnabled()) {
+            throw new SubscriptionServiceException("Feature is not enabled", HttpStatus.BAD_REQUEST.value());
+
+        }
 
         //STEP 3: Check parent rule
         if (enable && feature.getParentFeatureId() != null) {
@@ -97,6 +102,9 @@ public class ClientServiceImpl implements ClientService {
             if (childFeaturesOptional.isPresent()) {
                 List<Feature> childFeatures = childFeaturesOptional.get();
                 for (Feature childFeature : childFeatures) {
+                    if(!childFeature.isEnabled()){
+                        continue;
+                    }
                     ClientFeature childClientFeature = clientFeatureRepository
                             .findByClientIdAndFeatureId(clientId, childFeature.getId());
 
@@ -149,7 +157,10 @@ public class ClientServiceImpl implements ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
         List<ClientFeature> clientFeatures = clientFeatureRepository
                 .findByClientId(clientId);
-        List<Feature> features = featureRepository.findAllById(clientFeatures.stream()
+        List<ClientFeature> enabledClientFeatures = clientFeatures.stream()
+                .filter(ClientFeature::isEnabled)
+                .toList();
+        List<Feature> features = featureRepository.findAllById(enabledClientFeatures.stream()
                 .map(ClientFeature::getFeatureId)
                 .toList());
         List<Feature> enabledFeatures = features.stream()

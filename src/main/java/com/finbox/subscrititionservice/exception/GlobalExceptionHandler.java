@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
                 CommonResponse.builder()
                         .status("error")
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                        .message("Unexpected error occurred")
+                        .message(ex.getMessage())
                         .data(null)
                         .build(),
                 HttpStatus.INTERNAL_SERVER_ERROR

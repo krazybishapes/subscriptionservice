@@ -38,7 +38,7 @@ public class ClientController {
     public ResponseEntity<?> toggleFeature(
             @PathVariable String clientId,
             @PathVariable Long featureId,
-            @RequestParam boolean enable) {
+            @RequestParam boolean enable) throws SubscriptionServiceException {
         String response = clientService.toggleFeatureForClient(clientId, featureId, enable);
         CommonResponse commonResponse = CommonResponse.builder()
                 .statusCode(HttpStatus.OK.value())

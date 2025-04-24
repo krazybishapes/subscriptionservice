@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface ClientService {
     ClientResponse createClient(ClientRequest clientRequest) throws SubscriptionServiceException;
-    String toggleFeatureForClient(String clientId, Long featureId, boolean enable);
+    String toggleFeatureForClient(String clientId, Long featureId, boolean enable) throws SubscriptionServiceException;
     ClientFeatures getAllEnabledFeatures(String clientId);
     boolean getFeatureFlagStatus(String clientId, Long feaureId);
 }
