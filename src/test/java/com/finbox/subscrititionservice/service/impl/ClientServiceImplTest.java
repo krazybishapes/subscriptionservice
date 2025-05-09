@@ -256,4 +256,44 @@ class ClientServiceImplTest {
                     () -> service.getFeatureFlagStatus("C8", 3L));
         }
     }
+
+
+    @Nested class EnableSubscription {
+
+        //add test cases for input validation
+
+
+
+        @Test @DisplayName("4.2 Create subscription for client")
+        void createSubscription() throws ResourceNotFoundException {
+
+        }
+
+        @Test @DisplayName("3.3 Expect exception when issue in creating subscription for client")
+        void createSubscriptionNegative() {
+
+        }
+    }
+
+
+    @Nested class GetClientSubscription {
+
+        //add test cases for input validation
+
+        @Test @DisplayName("4.1 returns Resource not found exception if client's subscription are not found")
+        void missingSubscription() throws ResourceNotFoundException {
+
+
+
+        }
+
+        @Test @DisplayName("4.2 Create subscription for client")
+        void getClientSubscription() throws ResourceNotFoundException {
+
+        }
+
+
+    }
+
+
 }

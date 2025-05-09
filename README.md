@@ -64,4 +64,13 @@ docker-compose up --build
 ```
 
 ### 🌐 Access the API
-- **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+Postman collection is available in the `resource` directory. Import it to test the endpoints.
+
+
+### 📜 Database Endpoint
+```bash
+localhost:8080/h2-console
+jdbc:h2:mem:testdb
+username: sa
+password: 
+```

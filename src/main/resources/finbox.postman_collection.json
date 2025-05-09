@@ -1,0 +1,242 @@
+{
+	"info": {
+		"_postman_id": "4ad612d3-7bf3-49f1-9440-7db216931676",
+		"name": "finbox",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "718720",
+		"_collection_link": "https://piemoney.postman.co/workspace/piemoney-Workspace~24a44f9a-0f2f-4edd-ae35-133d23c8ee79/collection/718720-4ad612d3-7bf3-49f1-9440-7db216931676?action=share&source=collection_link&creator=718720"
+	},
+	"item": [
+		{
+			"name": "Create Client",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\n    \"name\":\"Santosh\",\n    \"email\":\"lpu.sa@gmail.com\"\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/api/clients",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Feature",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\n\"name\":\"Feature B\",\n\"code\":\"B\",\n\"description\":\"Feature B- Parent A \",\n\"parentFeatureId\": 1\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/api/features",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"features"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Feature Flag",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/features/A/enabled",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"features",
+						"A",
+						"enabled"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Toggle Feature Flag",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/features/A/toggle?enable=true",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"features",
+						"A",
+						"toggle"
+					],
+					"query": [
+						{
+							"key": "enable",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Feature Toggles",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/features/toggles",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"features",
+						"toggles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Toggle feature for clients",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/clients/0777be17-2d3a-46c7-a7c9-510b97da92c4/features/1/toggle?enable=true",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"clients",
+						"0777be17-2d3a-46c7-a7c9-510b97da92c4",
+						"features",
+						"1",
+						"toggle"
+					],
+					"query": [
+						{
+							"key": "enable",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Enabled Features for clients",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/clients/f0291b16-5891-4484-8cd8-609c01c89a97/features",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"clients",
+						"f0291b16-5891-4484-8cd8-609c01c89a97",
+						"features"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Client Feature Flag Status",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/v1/api/clients/0777be17-2d3a-46c7-a7c9-510b97da92c4/features/status?featureId=1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"api",
+						"clients",
+						"0777be17-2d3a-46c7-a7c9-510b97da92c4",
+						"features",
+						"status"
+					],
+					"query": [
+						{
+							"key": "featureId",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
