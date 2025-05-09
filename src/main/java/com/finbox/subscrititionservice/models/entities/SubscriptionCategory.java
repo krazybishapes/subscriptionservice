@@ -1,7 +1,6 @@
 package com.finbox.subscrititionservice.models.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,15 +12,17 @@ import lombok.Setter;
 @Builder
 public class SubscriptionCategory {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String code;
+    private Long code;
     private String name;
     private String description;
     private Boolean isEnabled;
+
 
     public boolean isEnabled() {
         return isEnabled != null && isEnabled;
     }
 
-    // Getters and Setters
 }

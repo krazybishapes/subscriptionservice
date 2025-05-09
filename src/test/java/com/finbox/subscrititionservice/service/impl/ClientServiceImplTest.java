@@ -267,10 +267,22 @@ class ClientServiceImplTest {
         @Test @DisplayName("4.2 Create subscription for client")
         void createSubscription() throws ResourceNotFoundException {
 
+
         }
 
-        @Test @DisplayName("3.3 Expect exception when issue in creating subscription for client")
+        @Test @DisplayName("3.3 Expect exception when subscription already exists for client")
         void createSubscriptionNegative() {
+
+        }
+
+
+        @Test @DisplayName("3.3 Expect exception when issue in creating subscription for client")
+        void createSubscriptionNegative1() {
+
+        }
+
+        @Test @DisplayName("3.3 Enabling feature for all features for client based on subscription")
+        void enablingFeature() {
 
         }
     }

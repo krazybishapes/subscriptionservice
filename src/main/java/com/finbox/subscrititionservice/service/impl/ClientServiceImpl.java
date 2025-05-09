@@ -3,16 +3,14 @@ package com.finbox.subscrititionservice.service.impl;
 import com.finbox.subscrititionservice.exception.InvalidRequestException;
 import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
-import com.finbox.subscrititionservice.models.entities.Client;
-import com.finbox.subscrititionservice.models.entities.ClientFeature;
-import com.finbox.subscrititionservice.models.entities.Feature;
+import com.finbox.subscrititionservice.models.entities.*;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
+import com.finbox.subscrititionservice.models.request.ClientSubscriptionRequest;
 import com.finbox.subscrititionservice.models.response.ClientFeatures;
+import com.finbox.subscrititionservice.models.response.ClientSubscriptionResponse;
 import com.finbox.subscrititionservice.models.response.FeatureResponse;
-import com.finbox.subscrititionservice.repositories.ClientFeatureRepository;
-import com.finbox.subscrititionservice.repositories.ClientRepository;
-import com.finbox.subscrititionservice.repositories.FeatureRepository;
+import com.finbox.subscrititionservice.repositories.*;
 import com.finbox.subscrititionservice.service.ClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,13 +29,19 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final FeatureRepository featureRepository;
     private final ClientFeatureRepository clientFeatureRepository;
+    private final ClientSubscriptionRepository clientSubscriptionRepository;
+    private final SubscriptionCategoryFeatureRepository subscriptionCategoryFeatureRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ClientServiceImpl.class);
 
-    public ClientServiceImpl(ClientRepository clientRepository, FeatureRepository featureRepository, ClientFeatureRepository clientFeatureRepository) {
+    public ClientServiceImpl(ClientRepository clientRepository, FeatureRepository featureRepository, ClientFeatureRepository clientFeatureRepository,
+                             ClientSubscriptionRepository clientSubscriptionRepository,
+                             SubscriptionCategoryFeatureRepository subscriptionCategoryFeatureRepository, SubscriptionCategoryFeatureRepository subscriptionCategoryFeatureRepository1) {
         this.clientRepository = clientRepository;
         this.featureRepository = featureRepository;
         this.clientFeatureRepository = clientFeatureRepository;
+        this.clientSubscriptionRepository = clientSubscriptionRepository;
+        this.subscriptionCategoryFeatureRepository = subscriptionCategoryFeatureRepository1;
     }
 
     @Override
@@ -194,5 +199,56 @@ public class ClientServiceImpl implements ClientService {
         }
         return clientFeature.isEnabled();
 
+    }
+
+    @Override
+    public ClientSubscriptionResponse createSubscription(ClientSubscriptionRequest clientSubscriptionRequest) throws SubscriptionServiceException {
+        log.info("Creating subscription for client {}", clientSubscriptionRequest.getClientId());
+
+        //STEP 1: throw exception if client is already subscribed to any subscription
+        Optional<ClientSubscription> clientSubscriptionsOptional = clientSubscriptionRepository.findByClientIdAndSubscriptionId(
+                Long.valueOf(clientSubscriptionRequest.getClientId()),
+                Long.valueOf(clientSubscriptionRequest.getSubscriptionId())
+        );
+
+        if(clientSubscriptionsOptional.isPresent()){
+           throw  new SubscriptionServiceException(
+                   "Client is already subscribed to this subscription",
+                   HttpStatus.BAD_REQUEST.value()
+           );
+        }
+
+        //STEP 2: enable all features for the subscription
+        ClientSubscription clientSubscription = ClientSubscription
+                .builder()
+                .clientId(Long.valueOf(clientSubscriptionRequest.getClientId()))
+                .subscriptionId(Long.valueOf(clientSubscriptionRequest.getSubscriptionId()))
+                .subscriptionCategoryId(Long.valueOf(clientSubscriptionRequest.getSubscriptionCategoryId()))
+                .startDate(clientSubscriptionRequest.getStartDate())
+                .build();
+
+        clientSubscriptionRepository.save(clientSubscription);
+
+
+        //STEP 3: enable all features for the subscription category
+        Optional<List<SubscriptionCategoryFeatures>> subscriptionCategoryFeaturesOptional = subscriptionCategoryFeatureRepository
+                .findBySubscriptionCategoryId(Long.valueOf(clientSubscriptionRequest.getSubscriptionCategoryId()));
+
+        if (subscriptionCategoryFeaturesOptional.isPresent()) {
+            List<SubscriptionCategoryFeatures> subscriptionCategoryFeaturesList = subscriptionCategoryFeaturesOptional.get();
+
+            for(SubscriptionCategoryFeatures subscriptionCategoryFeatures: subscriptionCategoryFeaturesList){
+
+                //TODO: check if feature is already enabled for the client
+
+
+                toggleFeatureForClient(
+                        clientSubscriptionRequest.getClientId(),
+                        subscriptionCategoryFeatures.getFeatureId(),
+                        true
+                );
+            }
+        }
+        return null;
     }
 }

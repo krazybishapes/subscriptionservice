@@ -3,9 +3,12 @@ package com.finbox.subscrititionservice.controller;
 
 import com.finbox.subscrititionservice.exception.ResourceNotFoundException;
 import com.finbox.subscrititionservice.exception.SubscriptionServiceException;
+import com.finbox.subscrititionservice.models.entities.ClientSubscription;
 import com.finbox.subscrititionservice.models.request.ClientRequest;
 import com.finbox.subscrititionservice.models.request.ClientResponse;
+import com.finbox.subscrititionservice.models.request.ClientSubscriptionRequest;
 import com.finbox.subscrititionservice.models.response.ClientFeatures;
+import com.finbox.subscrititionservice.models.response.ClientSubscriptionResponse;
 import com.finbox.subscrititionservice.models.response.CommonResponse;
 import com.finbox.subscrititionservice.service.ClientService;
 import org.springframework.http.HttpStatus;
@@ -104,6 +107,20 @@ public class ClientController {
                 .success(true)
                 .build();
         return ResponseEntity.ok(commonResponse);
+    }
+
+    @PostMapping("/subscription")
+    public ResponseEntity<?> createClientSubscription(@RequestBody ClientSubscriptionRequest clientSubscriptionRequest) throws SubscriptionServiceException {
+
+        ClientSubscriptionResponse clientSubscriptionResponse = clientService.createSubscription(clientSubscriptionRequest);
+
+        CommonResponse response = CommonResponse.builder()
+                .statusCode(HttpStatus.CREATED.value())
+                .message("Client subscription created successfully")
+                .success(true)
+                .data(clientSubscriptionResponse)
+                .build();
+        return ResponseEntity.ok(response);
     }
 
 
